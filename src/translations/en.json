@@ -1671,7 +1671,8 @@
         "search_or_custom": "Search | Add custom item",
         "add_custom_item": "Add custom item",
         "result_count": "{count} {count, plural,\n one {result}\n other {results}\n} for {term}",
-        "no_results": "No results for {term}"
+        "no_results": "No results for {term}",
+        "filter_by_section": "Filter: {section}"
       },
       "suggest_with_ai": {
         "label": "Suggest",
@@ -11805,7 +11806,16 @@
                 "label": "Fan direction"
               },
               "fan-speed": {
-                "label": "Fan speed"
+                "label": "Fan speed",
+                "style": "[%key:ui::panel::lovelace::editor::features::types::numeric-input::style%]",
+                "style_list": {
+                  "buttons": "[%key:ui::panel::lovelace::editor::features::types::numeric-input::style_list::buttons%]",
+                  "buttons_description": "Pick a speed from a row of buttons",
+                  "slider": "[%key:ui::panel::lovelace::editor::features::types::numeric-input::style_list::slider%]",
+                  "slider_description": "Drag to set the speed"
+                },
+                "style_helper": "Buttons switch to a slider when the card is too narrow to fit them.",
+                "style_unavailable": "This fan has too many speeds to show them as buttons."
               },
               "alarm-modes": {
                 "label": "Alarm modes",
@@ -12826,6 +12836,7 @@
           "location_name": "Name of your Home Assistant installation",
           "location_name_default": "Home",
           "address_label": "Search address",
+          "search_results": "Search results",
           "button_detect": "Detect",
           "finish": "Next"
         },
@@ -13220,6 +13231,7 @@
           },
           "details": {
             "requires": "Requires Home Assistant {version} or newer",
+            "pre_releases_included": "Pre-releases included",
             "source_code": "View source code",
             "issue_tracker": "Issue tracker"
           },
@@ -13245,6 +13257,8 @@
         },
         "repository_menu": {
           "dismiss_new": "Dismiss new",
+          "exclude_pre_releases": "Exclude pre-releases",
+          "include_pre_releases": "Include pre-releases",
           "issue_tracker": "Issue tracker",
           "install_other_version": "Install another version",
           "reinstall": "Reinstall",
@@ -13265,7 +13279,8 @@
         "menu": {
           "custom_repositories": "Custom repositories",
           "dismiss": "Dismiss new repositories",
-          "documentation": "Documentation"
+          "documentation": "Documentation",
+          "download_source": "Download source"
         },
         "dialog": {
           "error": {
@@ -13279,6 +13294,11 @@
           "reload": {
             "description": "You need to reload your browser for the updated resources to be used.",
             "confirm": "Do you want to do that now?"
+          },
+          "include_pre_releases": {
+            "title": "Include pre-releases of {name}?",
+            "text": "Updates will include versions marked as pre-release on GitHub, such as betas and release candidates. They are for testers and can contain unstable changes. If you exclude them again later, an installed pre-release stays until a newer stable version is out.",
+            "confirm": "Include"
           },
           "uninstall": {
             "title": "Uninstall {name}?",

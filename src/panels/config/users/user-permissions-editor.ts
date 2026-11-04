@@ -234,6 +234,9 @@ export class UserPermissionsEditor extends LitElement {
   }
 
   private _targetPicked(ev: CustomEvent) {
+    // Stop the picker's own event: only the editor's policy-shaped event
+    // may travel up to the dialog.
+    ev.stopPropagation();
     const subcategory = (ev.currentTarget as any).subcategory as
       RuleSubcategory | undefined;
     const target = ev.detail.value as string | undefined;

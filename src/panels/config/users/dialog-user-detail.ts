@@ -360,7 +360,13 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
   }
 
   private _policyChanged(ev: CustomEvent): void {
-    this._policy = ev.detail.value;
+    // Only accept policy-shaped values; stray bubbled picker events that
+    // carry a raw target string must never overwrite the edited policy.
+    const value = ev.detail.value;
+    if (typeof value !== "object" || value === null) {
+      return;
+    }
+    this._policy = value;
     this._policyDirty = true;
   }
 

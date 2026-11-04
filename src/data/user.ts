@@ -37,6 +37,7 @@ export interface EntityRule {
   control?: boolean;
   edit?: boolean;
   configure?: boolean;
+  automate?: boolean;
 }
 
 export type EntityRuleValue = EntityRule | true;
@@ -46,6 +47,7 @@ export interface UserPolicyEntities {
   device_ids?: Record<string, EntityRuleValue>;
   area_ids?: Record<string, EntityRuleValue>;
   domains?: Record<string, EntityRuleValue>;
+  floor_ids?: Record<string, EntityRuleValue>;
   all?: EntityRuleValue;
 }
 
@@ -77,13 +79,21 @@ export const normalizeRule = (
   value: EntityRuleValue | undefined
 ): EntityRule => {
   if (value === true) {
-    return { read: true, control: true, edit: true, configure: true };
+    return {
+      read: true,
+      control: true,
+      edit: true,
+      configure: true,
+      automate: true,
+    };
   }
   return { ...(value ?? {}) };
 };
 
 export const ruleHasRights = (rule: EntityRule): boolean =>
-  Boolean(rule.read || rule.control || rule.edit || rule.configure);
+  Boolean(
+    rule.read || rule.control || rule.edit || rule.configure || rule.automate
+  );
 
 export type AccessMode =
   "open" | "read_only" | "least_privileged" | "open_unless_specified";

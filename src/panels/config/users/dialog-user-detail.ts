@@ -15,6 +15,8 @@ import "../../../components/input/ha-input";
 import type { HaInput } from "../../../components/input/ha-input";
 import "../../../components/item/ha-row-item";
 import { adminChangeUsername } from "../../../data/auth";
+import type { AccessGroup } from "../../../data/access_group";
+import { fetchGroups } from "../../../data/access_group";
 import {
   computeUserBadges,
   fetchUserPermissions,
@@ -40,6 +42,7 @@ interface UserDetailFormState {
   isAdmin?: boolean;
   localOnly?: boolean;
   isActive?: boolean;
+  customGroups?: string;
 }
 
 @customElement("dialog-user-detail")
@@ -57,6 +60,10 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
   @state() private _isActive?: boolean;
 
   @state() private _policy?: UserPolicy;
+
+  @state() private _customGroups: AccessGroup[] = [];
+
+  @state() private _memberGroupIds: string[] = [];
 
   @state() private _policyDirty = false;
 
@@ -77,6 +84,14 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
     this._isActive = params.entry.is_active;
     this._policy = undefined;
     this._policyDirty = false;
+    this._customGroups = [];
+    this._memberGroupIds = params.entry.group_ids.filter(
+      (groupId) =>
+        groupId !== SYSTEM_GROUP_ID_ADMIN &&
+        groupId !== SYSTEM_GROUP_ID_USER &&
+        groupId !== "owner" &&
+        groupId !== "system-read-only"
+    );
     this._open = true;
     if (!params.entry.system_generated && !params.entry.is_owner) {
       try {
@@ -92,6 +107,18 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
           this._policy = {};
         }
       }
+      try {
+        const groups = await fetchGroups(this.hass);
+        if (this._params === params) {
+          this._customGroups = groups.filter(
+            (group) => !group.system_generated
+          );
+        }
+      } catch {
+        if (this._params === params) {
+          this._customGroups = [];
+        }
+      }
     }
     this._initDirtyTracking(
       { type: "shallow" },
@@ -100,6 +127,7 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
         isAdmin: this._isAdmin,
         localOnly: this._localOnly,
         isActive: this._isActive,
+        customGroups: [...this._memberGroupIds].sort().join(","),
       }
     );
     await this.updateComplete;
@@ -266,6 +294,33 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
               ></ha-switch>
             </ha-row-item>
             ${
+              !user.system_generated &&
+              !user.is_owner &&
+              this._customGroups.length > 0
+                ? html`
+                    <div class="groups-header">
+                      ${this.hass.localize(
+                        "ui.panel.config.users.groups.membership"
+                      )}
+                    </div>
+                    ${this._customGroups.map(
+                      (group) => html`
+                        <ha-row-item>
+                          <span slot="headline">${group.name}</span>
+                          <ha-switch
+                            slot="end"
+                            .checked=${this._memberGroupIds.includes(group.id)}
+                            .disabled=${this._submitting}
+                            data-group-id=${group.id}
+                            @change=${this._groupMembershipToggle}
+                          ></ha-switch>
+                        </ha-row-item>
+                      `
+                    )}
+                  `
+                : nothing
+            }
+            ${
               !this._isAdmin && !user.system_generated
                 ? html`
                     <ha-alert alert-type="info">
@@ -359,6 +414,19 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
     this._publishDirtyState();
   }
 
+  private _groupMembershipToggle(ev: Event): void {
+    const target = ev.target as HTMLInputElement & { dataset: DOMStringMap };
+    const groupId = target.dataset.groupId;
+    if (!groupId) {
+      return;
+    }
+    const checked = target.checked;
+    this._memberGroupIds = checked
+      ? [...this._memberGroupIds, groupId]
+      : this._memberGroupIds.filter((entry) => entry !== groupId);
+    this._publishDirtyState();
+  }
+
   private _policyChanged(ev: CustomEvent): void {
     // Only accept policy-shaped values; stray bubbled picker events that
     // carry a raw target string must never overwrite the edited policy.
@@ -376,6 +444,7 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
       isAdmin: this._isAdmin,
       localOnly: this._localOnly,
       isActive: this._isActive,
+      customGroups: [...this._memberGroupIds].sort().join(","),
     });
   }
 
@@ -387,6 +456,7 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
         is_active: this._isActive,
         group_ids: [
           this._isAdmin ? SYSTEM_GROUP_ID_ADMIN : SYSTEM_GROUP_ID_USER,
+          ...this._memberGroupIds,
         ],
         local_only: this._localOnly,
       });
@@ -504,6 +574,10 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
           --ha-row-item-padding-inline: 0;
         }
         .permissions-header {
+          font-weight: 500;
+          margin-top: 16px;
+        }
+        .groups-header {
           font-weight: 500;
           margin-top: 16px;
         }

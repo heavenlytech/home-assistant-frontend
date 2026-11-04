@@ -8053,7 +8053,10 @@
               "right_control": "Control",
               "right_edit": "Edit",
               "right_configure": "Configure",
-              "select_hint": "Choosing a target adds its rule at once."
+              "select_hint": "Choosing a target adds its rule at once.",
+              "right_automate": "Automate",
+              "floors": "Floors",
+              "select_floor": "Select a floor"
             }
           },
           "add_user": {
@@ -8092,6 +8095,17 @@
             "mode_least_privileged_description": "Ordinary users see nothing until an administrator grants them explicit permission rules.",
             "mode_open_unless_specified": "Open unless specified",
             "mode_open_unless_specified_description": "Ordinary users can view and control everything until they receive at least one explicit permission rule, which then limits them to only what is granted."
+          },
+          "groups": {
+            "title": "Groups",
+            "name": "Group name",
+            "add_group": "Add group",
+            "membership": "Custom groups",
+            "member_count": "{count} members",
+            "system_group": "System group",
+            "system_read_only": "System groups are managed automatically and cannot be changed here.",
+            "confirm_deletion_title": "Delete {name}?",
+            "confirm_deletion_text": "Members of this group will lose the access its rules granted."
           }
         },
         "application_credentials": {

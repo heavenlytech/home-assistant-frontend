@@ -6,6 +6,7 @@ import { computeDeviceNameDisplay } from "../../../common/entity/compute_device_
 import { fireEvent } from "../../../common/dom/fire_event";
 import "../../../components/device/ha-device-picker";
 import "../../../components/ha-area-picker";
+import "../../../components/ha-floor-picker";
 import "../../../components/ha-icon-button";
 import "../../../components/ha-select";
 import "../../../components/ha-switch";
@@ -20,9 +21,15 @@ import type { HomeAssistant } from "../../../types";
 
 type PermissionRight = keyof EntityRule;
 
-const RIGHTS: PermissionRight[] = ["read", "control", "edit", "configure"];
+const RIGHTS: PermissionRight[] = [
+  "read",
+  "control",
+  "edit",
+  "configure",
+  "automate",
+];
 
-type RuleSubcategory = "device_ids" | "area_ids" | "domains";
+type RuleSubcategory = "device_ids" | "area_ids" | "domains" | "floor_ids";
 
 const SECTIONS = [
   {
@@ -40,6 +47,11 @@ const SECTIONS = [
     titleKey: "ui.panel.config.users.editor.permissions.domains",
     pickerKey: "ui.panel.config.users.editor.permissions.select_domain",
   },
+  {
+    subcategory: "floor_ids",
+    titleKey: "ui.panel.config.users.editor.permissions.floors",
+    pickerKey: "ui.panel.config.users.editor.permissions.select_floor",
+  },
 ] as const;
 
 type SectionConfig = (typeof SECTIONS)[number];
@@ -56,6 +68,7 @@ export class UserPermissionsEditor extends LitElement {
     device_ids: "",
     area_ids: "",
     domains: "",
+    floor_ids: "",
   };
 
   protected render() {
@@ -144,6 +157,22 @@ export class UserPermissionsEditor extends LitElement {
                 `
               : nothing
           }
+          ${
+            section.subcategory === "floor_ids"
+              ? html`
+                  <ha-floor-picker
+                    .label=${this.hass.localize(section.pickerKey)}
+                    .helper=${this.hass.localize(
+                      "ui.panel.config.users.editor.permissions.select_hint"
+                    )}
+                    .value=${pending}
+                    .disabled=${this.disabled}
+                    .subcategory=${section.subcategory}
+                    @value-changed=${this._targetPicked}
+                  ></ha-floor-picker>
+                `
+              : nothing
+          }
         </div>
       </div>
     `;
@@ -221,6 +250,9 @@ export class UserPermissionsEditor extends LitElement {
     }
     if (subcategory === "area_ids") {
       return this.hass.areas?.[target]?.name ?? target;
+    }
+    if (subcategory === "floor_ids") {
+      return this.hass.floors?.[target]?.name ?? target;
     }
     return target;
   }

@@ -1,4 +1,4 @@
-import { mdiCheck, mdiPlus, mdiShieldAccount } from "@mdi/js";
+import { mdiAccountGroup, mdiCheck, mdiPlus, mdiShieldAccount } from "@mdi/js";
 import type { PropertyValues } from "lit";
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators";
@@ -28,6 +28,7 @@ import type { HomeAssistant, Route } from "../../../types";
 import { configSections } from "../config-sections";
 import { showAccessDefaultsDialog } from "./show-dialog-access-defaults";
 import { showAddUserDialog } from "./show-dialog-add-user";
+import { showGroupsListDialog } from "./show-dialog-groups-list";
 import { showUserDetailDialog } from "./show-dialog-user-detail";
 import { storage } from "../../../common/decorators/storage";
 
@@ -209,6 +210,15 @@ export class HaConfigUsers extends LitElement {
         </ha-button>
         <ha-icon-button
           slot="toolbar-icon"
+          .path=${mdiAccountGroup}
+          @click=${this._showGroups}
+          id="button-groups"
+        ></ha-icon-button>
+        <ha-tooltip placement="bottom" for="button-groups">
+          ${this.hass.localize("ui.panel.config.users.groups.title")}
+        </ha-tooltip>
+        <ha-icon-button
+          slot="toolbar-icon"
           .path=${mdiShieldAccount}
           @click=${this._showAccessDefaults}
           id="button-access-defaults"
@@ -308,6 +318,15 @@ export class HaConfigUsers extends LitElement {
         if (user) {
           this._users = [...this._users, user];
         }
+      },
+    });
+  }
+
+  private _showGroups() {
+    showGroupsListDialog(this, {
+      groupsChangedCallback: () => {
+        this._loading = true;
+        this._fetchUsers();
       },
     });
   }

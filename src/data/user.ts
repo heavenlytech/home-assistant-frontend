@@ -85,12 +85,14 @@ export const normalizeRule = (
 export const ruleHasRights = (rule: EntityRule): boolean =>
   Boolean(rule.read || rule.control || rule.edit || rule.configure);
 
-export type AccessMode = "open" | "read_only" | "least_privileged";
+export type AccessMode =
+  "open" | "read_only" | "least_privileged" | "open_unless_specified";
 
 export const ACCESS_MODES: AccessMode[] = [
   "open",
   "read_only",
   "least_privileged",
+  "open_unless_specified",
 ];
 
 export const fetchAccessDefaults = async (hass: HomeAssistant) =>

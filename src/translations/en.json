@@ -8051,7 +8051,8 @@
               "right_read": "View",
               "right_control": "Control",
               "right_edit": "Edit",
-              "right_configure": "Configure"
+              "right_configure": "Configure",
+              "select_hint": "Choosing a target adds its rule at once."
             }
           },
           "add_user": {
@@ -8087,7 +8088,9 @@
             "mode_read_only": "Read only",
             "mode_read_only_description": "Ordinary users can view everything but control nothing.",
             "mode_least_privileged": "Least privileged",
-            "mode_least_privileged_description": "Ordinary users see nothing until an administrator grants them explicit permission rules."
+            "mode_least_privileged_description": "Ordinary users see nothing until an administrator grants them explicit permission rules.",
+            "mode_open_unless_specified": "Open unless specified",
+            "mode_open_unless_specified_description": "Ordinary users can view and control everything until they receive at least one explicit permission rule, which then limits them to only what is granted."
           }
         },
         "application_credentials": {

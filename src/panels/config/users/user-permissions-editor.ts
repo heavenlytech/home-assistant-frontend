@@ -1,4 +1,4 @@
-import { mdiDelete, mdiPlus } from "@mdi/js";
+import { mdiDelete } from "@mdi/js";
 import type { CSSResultGroup } from "lit";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators";
@@ -6,10 +6,8 @@ import { computeDeviceNameDisplay } from "../../../common/entity/compute_device_
 import { fireEvent } from "../../../common/dom/fire_event";
 import "../../../components/device/ha-device-picker";
 import "../../../components/ha-area-picker";
-import "../../../components/ha-button";
 import "../../../components/ha-icon-button";
 import "../../../components/ha-select";
-import "../../../components/ha-svg-icon";
 import "../../../components/ha-switch";
 import type {
   EntityRule,
@@ -102,6 +100,9 @@ export class UserPermissionsEditor extends LitElement {
               ? html`
                   <ha-device-picker
                     .label=${this.hass.localize(section.pickerKey)}
+                    .helper=${this.hass.localize(
+                      "ui.panel.config.users.editor.permissions.select_hint"
+                    )}
                     .value=${pending}
                     .disabled=${this.disabled}
                     .subcategory=${section.subcategory}
@@ -115,6 +116,9 @@ export class UserPermissionsEditor extends LitElement {
               ? html`
                   <ha-area-picker
                     .label=${this.hass.localize(section.pickerKey)}
+                    .helper=${this.hass.localize(
+                      "ui.panel.config.users.editor.permissions.select_hint"
+                    )}
                     .value=${pending}
                     .disabled=${this.disabled}
                     .subcategory=${section.subcategory}
@@ -128,6 +132,9 @@ export class UserPermissionsEditor extends LitElement {
               ? html`
                   <ha-select
                     .label=${this.hass.localize(section.pickerKey)}
+                    .helper=${this.hass.localize(
+                      "ui.panel.config.users.editor.permissions.select_hint"
+                    )}
                     .value=${pending}
                     .options=${this._domains()}
                     .disabled=${this.disabled}
@@ -137,17 +144,6 @@ export class UserPermissionsEditor extends LitElement {
                 `
               : nothing
           }
-          <ha-button
-            appearance="plain"
-            .disabled=${!pending || this.disabled}
-            .subcategory=${section.subcategory}
-            @click=${this._addRule}
-          >
-            <ha-svg-icon slot="icon" .path=${mdiPlus}></ha-svg-icon>
-            ${this.hass.localize(
-              "ui.panel.config.users.editor.permissions.add"
-            )}
-          </ha-button>
         </div>
       </div>
     `;
@@ -240,23 +236,8 @@ export class UserPermissionsEditor extends LitElement {
   private _targetPicked(ev: CustomEvent) {
     const subcategory = (ev.currentTarget as any).subcategory as
       RuleSubcategory | undefined;
-    if (!subcategory) {
-      return;
-    }
-    this._newTarget = {
-      ...this._newTarget,
-      [subcategory]: ev.detail.value ?? "",
-    };
-  }
-
-  private _addRule(ev: Event) {
-    const subcategory = (ev.currentTarget as any).subcategory as
-      RuleSubcategory | undefined;
-    if (!subcategory) {
-      return;
-    }
-    const target = this._newTarget[subcategory];
-    if (!target) {
+    const target = ev.detail.value as string | undefined;
+    if (!subcategory || !target) {
       return;
     }
     const entities: UserPolicyEntities = { ...(this.policy.entities ?? {}) };
@@ -265,10 +246,10 @@ export class UserPermissionsEditor extends LitElement {
       current && typeof current === "object" ? { ...current } : {};
     if (!(target in rules)) {
       rules[target] = { read: true };
+      entities[subcategory] = rules;
+      fireEvent(this, "value-changed", { value: { entities } });
     }
-    entities[subcategory] = rules;
     this._newTarget = { ...this._newTarget, [subcategory]: "" };
-    fireEvent(this, "value-changed", { value: { entities } });
   }
 
   private _removeRule(ev: Event) {

@@ -17,9 +17,13 @@ import "../../../components/item/ha-row-item";
 import { adminChangeUsername } from "../../../data/auth";
 import {
   computeUserBadges,
+  fetchUserPermissions,
+  policyHasRules,
   SYSTEM_GROUP_ID_ADMIN,
   SYSTEM_GROUP_ID_USER,
+  updateUserPermissions,
 } from "../../../data/user";
+import type { UserPolicy } from "../../../data/user";
 import {
   showAlertDialog,
   showPromptDialog,
@@ -29,6 +33,7 @@ import { haStyleDialog } from "../../../resources/styles";
 import type { HomeAssistant } from "../../../types";
 import { showAdminChangePasswordDialog } from "./show-dialog-admin-change-password";
 import type { UserDetailDialogParams } from "./show-dialog-user-detail";
+import "./user-permissions-editor";
 
 interface UserDetailFormState {
   name: string;
@@ -51,6 +56,10 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
 
   @state() private _isActive?: boolean;
 
+  @state() private _policy?: UserPolicy;
+
+  @state() private _policyDirty = false;
+
   @state() private _error?: string;
 
   @state() private _params?: UserDetailDialogParams;
@@ -66,7 +75,24 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
     this._isAdmin = params.entry.group_ids.includes(SYSTEM_GROUP_ID_ADMIN);
     this._localOnly = params.entry.local_only;
     this._isActive = params.entry.is_active;
+    this._policy = undefined;
+    this._policyDirty = false;
     this._open = true;
+    if (!params.entry.system_generated && !params.entry.is_owner) {
+      try {
+        const { policy } = await fetchUserPermissions(
+          this.hass,
+          params.entry.id
+        );
+        if (this._params === params) {
+          this._policy = policy ?? {};
+        }
+      } catch {
+        if (this._params === params) {
+          this._policy = {};
+        }
+      }
+    }
     this._initDirtyTracking(
       { type: "shallow" },
       {
@@ -88,7 +114,7 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
     return html`
       <ha-dialog
         .open=${this._open}
-        .preventScrimClose=${this.isDirtyState}
+        .preventScrimClose=${this.isDirtyState || this._policyDirty}
         header-title=${user.name}
         @closed=${this._dialogClosed}
       >
@@ -250,6 +276,25 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
                   `
                 : nothing
             }
+            ${
+              !user.system_generated &&
+              !user.is_owner &&
+              this._policy !== undefined
+                ? html`
+                    <div class="permissions-header">
+                      ${this.hass.localize(
+                        "ui.panel.config.users.editor.permissions.title"
+                      )}
+                    </div>
+                    <user-permissions-editor
+                      .hass=${this.hass}
+                      .policy=${this._policy}
+                      .disabled=${this._submitting}
+                      @value-changed=${this._policyChanged}
+                    ></user-permissions-editor>
+                  `
+                : nothing
+            }
           </div>
           ${
             user.system_generated
@@ -283,7 +328,7 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
               !this._name ||
               this._submitting ||
               user.system_generated ||
-              !this.isDirtyState
+              (!this.isDirtyState && !this._policyDirty)
             }
           >
             ${this.hass!.localize("ui.common.save")}
@@ -314,6 +359,11 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
     this._publishDirtyState();
   }
 
+  private _policyChanged(ev: CustomEvent): void {
+    this._policy = ev.detail.value;
+    this._policyDirty = true;
+  }
+
   private _publishDirtyState(): void {
     this._updateDirtyState({
       name: this._name,
@@ -334,6 +384,12 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
         ],
         local_only: this._localOnly,
       });
+      if (this._policyDirty) {
+        const policy =
+          this._policy && policyHasRules(this._policy) ? this._policy : null;
+        await updateUserPermissions(this.hass, this._params!.entry.id, policy);
+        this._policyDirty = false;
+      }
       this._markDirtyStateClean();
       this._close();
     } catch (err: any) {
@@ -440,6 +496,10 @@ class DialogUserDetail extends DirtyStateProviderMixin<UserDetailFormState>()(
         }
         ha-row-item {
           --ha-row-item-padding-inline: 0;
+        }
+        .permissions-header {
+          font-weight: 500;
+          margin-top: 16px;
         }
         .badge-container {
           margin-top: 4px;

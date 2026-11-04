@@ -32,6 +32,73 @@ export interface UpdateUserParams {
   local_only?: boolean;
 }
 
+export interface EntityRule {
+  read?: boolean;
+  control?: boolean;
+  edit?: boolean;
+  configure?: boolean;
+}
+
+export type EntityRuleValue = EntityRule | true;
+
+export interface UserPolicyEntities {
+  entity_ids?: Record<string, EntityRuleValue>;
+  device_ids?: Record<string, EntityRuleValue>;
+  area_ids?: Record<string, EntityRuleValue>;
+  domains?: Record<string, EntityRuleValue>;
+  all?: EntityRuleValue;
+}
+
+export interface UserPolicy {
+  entities?: UserPolicyEntities;
+}
+
+export const fetchUserPermissions = async (
+  hass: HomeAssistant,
+  userId: string
+) =>
+  hass.callWS<{ policy: UserPolicy }>({
+    type: "config/auth/permissions/get",
+    user_id: userId,
+  });
+
+export const updateUserPermissions = async (
+  hass: HomeAssistant,
+  userId: string,
+  policy: UserPolicy | null
+) =>
+  hass.callWS<{ policy: UserPolicy }>({
+    type: "config/auth/permissions/update",
+    user_id: userId,
+    policy,
+  });
+
+export const normalizeRule = (
+  value: EntityRuleValue | undefined
+): EntityRule => {
+  if (value === true) {
+    return { read: true, control: true, edit: true, configure: true };
+  }
+  return { ...(value ?? {}) };
+};
+
+export const ruleHasRights = (rule: EntityRule): boolean =>
+  Boolean(rule.read || rule.control || rule.edit || rule.configure);
+
+export const policyHasRules = (policy: UserPolicy | null): boolean => {
+  if (!policy?.entities) {
+    return false;
+  }
+  return Object.values(policy.entities).some(
+    (subcategory) =>
+      subcategory === true ||
+      (typeof subcategory === "object" &&
+        Object.values(subcategory).some(
+          (rule) => rule === true || ruleHasRights(rule as EntityRule)
+        ))
+  );
+};
+
 export const fetchUsers = async (callWS: HomeAssistant["callWS"]) =>
   callWS<User[]>({
     type: "config/auth/list",

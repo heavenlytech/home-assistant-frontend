@@ -8035,7 +8035,24 @@
             "system_generated_read_only_users": "System users cannot be updated.",
             "unnamed_user": "Unnamed user",
             "confirm_user_deletion_title": "Delete {name}?",
-            "confirm_user_deletion_text": "This user will be permanently deleted."
+            "confirm_user_deletion_text": "This user will be permanently deleted.",
+            "permissions": {
+              "title": "Permissions",
+              "description": "Grant this user access to specific devices, areas, or domains. Anything not listed stays hidden.",
+              "devices": "Devices",
+              "areas": "Areas",
+              "domains": "Domains",
+              "add": "Add",
+              "no_rules": "No rules yet.",
+              "select_device": "Select a device",
+              "select_area": "Select an area",
+              "select_domain": "Select a domain",
+              "remove_rule": "Remove rule",
+              "right_read": "View",
+              "right_control": "Control",
+              "right_edit": "Edit",
+              "right_configure": "Configure"
+            }
           },
           "add_user": {
             "caption": "Add user",

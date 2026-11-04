@@ -1,4 +1,4 @@
-import { mdiCheck, mdiPlus } from "@mdi/js";
+import { mdiCheck, mdiPlus, mdiShieldAccount } from "@mdi/js";
 import type { PropertyValues } from "lit";
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators";
@@ -12,7 +12,9 @@ import type {
 } from "../../../components/data-table/ha-data-table";
 import "../../../components/data-table/ha-data-table-icon";
 import "../../../components/ha-button";
+import "../../../components/ha-icon-button";
 import "../../../components/ha-svg-icon";
+import "../../../components/ha-tooltip";
 import type { User } from "../../../data/user";
 import {
   computeUserBadges,
@@ -24,6 +26,7 @@ import { showConfirmationDialog } from "../../../dialogs/generic/show-dialog-box
 import "../../../layouts/hass-tabs-subpage-data-table";
 import type { HomeAssistant, Route } from "../../../types";
 import { configSections } from "../config-sections";
+import { showAccessDefaultsDialog } from "./show-dialog-access-defaults";
 import { showAddUserDialog } from "./show-dialog-add-user";
 import { showUserDetailDialog } from "./show-dialog-user-detail";
 import { storage } from "../../../common/decorators/storage";
@@ -204,6 +207,15 @@ export class HaConfigUsers extends LitElement {
           <ha-svg-icon slot="start" .path=${mdiPlus}></ha-svg-icon>
           ${this.hass.localize("ui.panel.config.users.picker.add_user")}
         </ha-button>
+        <ha-icon-button
+          slot="toolbar-icon"
+          .path=${mdiShieldAccount}
+          @click=${this._showAccessDefaults}
+          id="button-access-defaults"
+        ></ha-icon-button>
+        <ha-tooltip placement="bottom" for="button-access-defaults">
+          ${this.hass.localize("ui.panel.config.users.defaults.title")}
+        </ha-tooltip>
       </hass-tabs-subpage-data-table>
     `;
   }
@@ -296,6 +308,15 @@ export class HaConfigUsers extends LitElement {
         if (user) {
           this._users = [...this._users, user];
         }
+      },
+    });
+  }
+
+  private _showAccessDefaults() {
+    showAccessDefaultsDialog(this, {
+      accessChangedCallback: () => {
+        this._loading = true;
+        this._fetchUsers();
       },
     });
   }

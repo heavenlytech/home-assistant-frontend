@@ -8076,6 +8076,18 @@
             "change": "Change",
             "username_changed": "The username has been changed successfully.",
             "failed": "Failed to change username"
+          },
+          "defaults": {
+            "title": "Default access",
+            "description": "Decide what ordinary users can do when they hold no explicit permission grants. Administrators and the owner always keep full access.",
+            "mode": "Default access mode",
+            "applies_to_existing": "Changing the mode applies at once to every existing ordinary user.",
+            "mode_open": "Open",
+            "mode_open_description": "Ordinary users can view and control everything, as before.",
+            "mode_read_only": "Read only",
+            "mode_read_only_description": "Ordinary users can view everything but control nothing.",
+            "mode_least_privileged": "Least privileged",
+            "mode_least_privileged_description": "Ordinary users see nothing until an administrator grants them explicit permission rules."
           }
         },
         "application_credentials": {
